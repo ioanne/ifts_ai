@@ -1,0 +1,34 @@
+services:
+  app:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+            - __pycache__/
+            - .git/
+            - .agents/
+            - .codex/
+            - db.sqlite3
+            - requirements.txt
+        - action: sync+restart
+          path: requirements.txt
+          target: /app/requirements.txt
+    ports:
+      - "8589:8000"
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,app"
+    command: >
+      sh -c "pip install -r requirements.txt &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000"
