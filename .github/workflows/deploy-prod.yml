@@ -1,0 +1,26 @@
+name: Deploy Prod
+
+on:
+  push:
+    branches:
+      - deploy-prod
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Validar entorno
+        run: test -f .env.deploy-prod
+
+      - name: Ejecutar deploy
+        run: sh scripts/deploy.sh .env.deploy-prod docker-compose-prod.yml

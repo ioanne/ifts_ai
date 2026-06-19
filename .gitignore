@@ -3,3 +3,5 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 .DS_Store
+.env.deploy-prod
+.env.deploy-test

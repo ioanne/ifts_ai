@@ -1,34 +1,25 @@
+name: ifts-ai-prod
+
 services:
   app:
     image: python:3.11-slim
+    restart: unless-stopped
     working_dir: /app
-    volumes:
-      - .:/app
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - .venv/
-            - __pycache__/
-            - .git/
-            - .agents/
-            - .codex/
-            - db.sqlite3
-            - requirements.txt
-        - action: sync+restart
-          path: requirements.txt
-          target: /app/requirements.txt
-    ports:
-      - "8589:8000"
+    env_file:
+      - .env.deploy-prod
     environment:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
-      DJANGO_DEBUG: "0"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,app"
+    volumes:
+      - .:/app
+      - pip-cache-prod:/root/.cache/pip
+    ports:
+      - "${APP_PORT:-8600}:8000"
     command: >
-      sh -c "pip install -r requirements.txt &&
+      sh -c "pip install -r requirements.txt gunicorn &&
       python manage.py migrate &&
-      python manage.py runserver 0.0.0.0:8000"
+      gunicorn ifts_ai.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_CONCURRENCY:-2}"
+
+volumes:
+  pip-cache-prod:
